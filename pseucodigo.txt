@@ -1,3 +1,5 @@
+[ ] Definir variable global "MAX=255"
+
 [ ] Instanciar CPUs según parámetro de input (comandos)
 [ ] guarda en alguna variable nombre de archivo de salida
 
