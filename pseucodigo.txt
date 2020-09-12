@@ -1,0 +1,38 @@
+[ ] Instanciar CPUs según parámetro de input (comandos)
+[ ] guarda en alguna variable nombre de archivo de salida
+
+[ ] Leer archivo input -> método que haga esto
+    [ ] 1a linea K -> cantidad de procesos
+    [ ] sgtes K líneas -> c/u un proceso
+    [ ] opción 1: retornar queue | opción 2: llenar variables globales para scheduler
+
+[ ] Instanciar cola
+
+[ ] Inicializar procesos -> método
+    [ ] Instanciar cada proceso
+    [ ] Agregarlo a la cola
+
+[ ] Inicializar variable de instante de tiempo actual
+
+[ ] Simulación (iteración por cada instante (discreto) de tiempo)
+    [ ] Recorrer cola de procesos y cambiar estados y atributos que correspondan
+    
+    [ ] Obtener N procesos más prioritario (READY Y RUNNING) -> Método que recorra arreglo de procesos y entrege los N procesos con deadline más cercano (ordenados, TANTO EN ESTADO READY COMO RUNNING)
+    [ ] Revisar estado del proceso
+        [ ] RUNNING -> no hacer nada, pasar al siguiente proceso
+        [ ] READY -> ingresar proceso a alguna CPU
+            [ ] Si hay CPU vacía -> meter en esa CPU
+            [ ] Si NO hay CPU vacía -> buscar CPU cn proceso menos prioritario y reemplazar ese
+
+    [ ] Pasar a siguiente instante
+
+
+[ ] Escribir archivo de salida con estadísticas de simulación -> método a lo mejor también
+
+EVENTOS
+- Llegada de un nuevo proceso (NEW->READY): proceso entra a cola de procesos
+- Entrada de un proceso a la CPU (READY->RUNNING)
+- Proceso interrumpido porque otro proceso con mayor prioridad debe ejecutar (RUNNING->READY)
+- Interrupción I/O (RUNNING->WAITING)
+- Proceso termina (RUNNING->FINISHED)
+- Proceso recibe I/O que estaba esperando (WAITING->READY)
