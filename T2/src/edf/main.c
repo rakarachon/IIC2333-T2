@@ -29,10 +29,29 @@ int main(int argc, char **argv)
   // TODO: Abrir archivo una vez terminó la ejecución (i.e. mover esta linea al final del programa)
   FILE *output_file = fopen(argv[2], "w");
 
-  int n_lines;
-  fscanf(input_file, "%d", &n_lines);
+  char n_lines[255];
+  int K;
+  fgets(n_lines, sizeof(n_lines), input_file);
 
-  printf("CANTIDAD DE PROCESOS: %d\n", n_lines);
+  K = atoi(n_lines);
+
+  printf("CANTIDAD DE PROCESOS: %d\n", K);
+
+  char line[256];
+  const char s[2] = " ";
+  char *token;
+
+   while (fgets(line, sizeof(line), input_file))
+   {
+     //printf("%s\n", line);
+     printf("PROCESO\n");
+     token = strtok(line, s);
+     while (token != NULL) 
+     {
+       printf("%s\n", token);
+       token = strtok(NULL, s);
+     }
+   }
   printf("WEEEEEEEEEEEEEE\n");
 
   fclose(input_file);
