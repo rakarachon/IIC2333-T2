@@ -18,13 +18,15 @@ int main(int argc, char **argv)
     int n_cpu = atoi(argv[3]);
     printf("CANTIDAD DE CPUS: %d\n", n_cpu);
   }
-  else 
+  else
   {
     int n_cpu = 1;
     printf("CANTIDAD DE CPUS: %d\n", n_cpu);
   }
 
+  // TODO: Sera necesario agregar una verificación de que el archivo de input entregado existe? para que no tire segmentation fault en caso que no exista, o podremos asumir que siempre se entregara un nombre archivo de input valido?
   FILE *input_file = fopen(argv[1], "r");
+  // TODO: Abrir archivo una vez terminó la ejecución (i.e. mover esta linea al final del programa)
   FILE *output_file = fopen(argv[2], "w");
 
   int n_lines;
