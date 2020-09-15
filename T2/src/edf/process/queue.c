@@ -3,11 +3,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-void get_N_highest_priority(Queue* queue, Process* N_highest, int N) {
+void get_N_highest_priority(Queue *queue, Process *N_highest, int N)
+{
     // Process N_highest[N]; /* N processes with highest priority */
-    int i = 0; /* Counter to get N processes */
-    Process CHP_process; /* Current Highest Priority Process */
-    int current_idx; /* Index of the process associated with CHP_process */
+    int i = 0;               /* Counter to get N processes */
+    Process CHP_process;     /* Current Highest Priority Process */
+    int current_idx;         /* Index of the process associated with CHP_process */
     int selected_indexes[N]; /* Queue indexes of the processes selected with highest priority */
     bool first;
     Process pr;
@@ -35,7 +36,6 @@ void get_N_highest_priority(Queue* queue, Process* N_highest, int N) {
                     CHP_process = queue->processes[idx];
                     current_idx = idx;
                 }
-
             }
         }
         queue->processes[current_idx].selected = true;
@@ -43,15 +43,44 @@ void get_N_highest_priority(Queue* queue, Process* N_highest, int N) {
         selected_indexes[i] = current_idx;
         i++;
     }
+    for (size_t j = 0; j < queue->length; j++)
+    {
+        printf("Process %d ", queue->processes[j].PID);
+        if (queue->processes[j].selected)
+        {
+            printf("selected\n");
+        }
+        else
+        {
+            printf("not selected\n");
+        }
+    }
+    printf("---------------------------------------------\n");
+    // Settear selected de vuelta a False
+    for (size_t j = 0; j < N; j++)
+    {
+        queue->processes[selected_indexes[j]].selected = false;
+    }
 
-    // TODO: settear selected de vuelta a False
+    for (size_t j = 0; j < queue->length; j++)
+    {
+        printf("Process %d ", queue->processes[j].PID);
+        if (queue->processes[j].selected)
+        {
+            printf("selected\n");
+        }
+        else
+        {
+            printf("not selected\n");
+        }
+    }
 }
 
-void update_processes(Queue* queue, int n_process)
+void update_processes(Queue *queue, int n_process)
 {
     printf("UPDATE");
-    for (int i = 0; i < n_process; i+=1)
+    for (int i = 0; i < n_process; i += 1)
     {
-        queue->processes[i].priority -= 1;  
+        queue->processes[i].priority -= 1;
     }
 }
