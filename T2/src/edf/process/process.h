@@ -1,4 +1,6 @@
 #include <sys/types.h> /* Primitive System Data Types */
+#include <stdbool.h>
+#pragma once
 
 #define MAX 255
 
@@ -14,8 +16,8 @@ typedef enum states
 typedef struct process
 {
     pid_t PID;              /* Process ID */
-    char *name[32];         /* Process Name */
-    int priority;           /* Instants left until deadline */
+    char name[32];         /* Process Name */
+    int priority;           /* Instants left until deadline. The closer to 0, the higher it is. */
     State state;            /* Current state */
     int deadline;           /* Specific time in which the process must have finished */
     int start_time;         /* Specific time in which the process arrives to the queue */
@@ -27,8 +29,9 @@ typedef struct process
     int interruptions;            /* Number of times the process has been interrupted */
     int waiting_time;             /* Time spent in state WAITING plus state READY */
     int last_arrival_waiting;     /* Specific time of the last change of the process state to WAITING */
-    int total_burst;              /* Total amount of bursts of the process (CPU + I/O) */
-    int *bursts[MAX];             /* Array containing the duration of each burst */
+    int total_bursts;              /* Total amount of bursts of the process (CPU + I/O) */
+    int bursts[MAX];             /* Array containing the duration of each burst */
     int current_bursts;           /* Number of bursts finished so far */
     int current_burst_start_time; /* Instant in which the current burst started */
+    bool selected; /* True if process has been selected as one of the N processes with highest priority */
 } Process;
