@@ -1,20 +1,19 @@
 [X] Definir variable global "MAX=255"
 
-[ ] Instanciar CPUs según parámetro de input (comandos)
-[ ] guarda en alguna variable nombre de archivo de salida
+[X] Instanciar CPUs según parámetro de input (comandos)
 
 [ ] Leer archivo input -> método que haga esto
-    [ ] 1a linea K -> cantidad de procesos
-    [ ] sgtes K líneas -> c/u un proceso
+    [X] 1a linea K -> cantidad de procesos
+    [X] sgtes K líneas -> c/u un proceso
     [ ] opción 1: retornar queue | opción 2: llenar variables globales para scheduler
 
-[ ] Instanciar cola
+[X] Instanciar cola
 
 [ ] Inicializar procesos -> método
     [ ] Instanciar cada proceso
     [ ] Agregarlo a la cola
 
-[ ] Inicializar variable de instante de tiempo actual
+[X] Inicializar variable de instante de tiempo actual
 
 [ ] Simulación (iteración por cada instante (discreto) de tiempo)
     [ ] Recorrer cola de procesos y cambiar estados y atributos que correspondan
