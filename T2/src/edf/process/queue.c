@@ -65,80 +65,12 @@ void print_process(Process *pr)
   }
 }
 
-static void processes_init(Queue *q)
+Queue q_init(int K)
 {
-  for (size_t i = 0; i < q->length; i++)
-  {
-    printf("Calling\n");
-    q->processes[i] = calloc(1, sizeof(Process));
-  }
-}
-
-static void processes_destroy(Queue *q)
-{
-  for (size_t i = 0; i < q->length; i++)
-  {
-    if (q->processes[i])
-    {
-      // free(q->processes[i]->state);
-      free(q->processes[i]);
-    }
-  }
-}
-
-void add_process(Queue *q, int idx, char *token, int *iteration, const char *s)
-{
-  q->processes[idx] = &(Process){
-      .state = NEW,
-      .times_in_CPU = 0,
-      .interruptions = 0,
-      .waiting_time = 0,
-      .response_time = 0,
-      .current_bursts = -1};
-
-  while (token != NULL)
-  {
-    if (*iteration == 0)
-    {
-      strcpy(q->processes[idx]->name, token);
-    }
-    else if (*iteration == 1)
-    {
-      q->processes[idx]->PID = atoi(token);
-    }
-    else if (*iteration == 2)
-    {
-      q->processes[idx]->start_time = atoi(token);
-      if (atoi(token) == 0)
-      {
-        q->processes[idx]->state = READY;
-        q->processes[idx]->last_arrival_ready = 0;
-      }
-    }
-    else if (*iteration == 3)
-    {
-      q->processes[idx]->deadline = atoi(token);
-      q->processes[idx]->priority = atoi(token);
-    }
-    else if (*iteration == 4)
-    {
-      q->processes[idx]->total_bursts = (atoi(token) * 2) - 1;
-    }
-    else if (*iteration >= 5)
-    {
-      q->processes[idx]->bursts[*iteration - 5] = atoi(token);
-    }
-
-    token = strtok(NULL, s);
-    *iteration += 1;
-  }
-}
-
-Queue *q_init(int K)
-{
-  Queue *q = malloc(sizeof(Queue));
-  q->length = K;
-  processes_init(q);
+  Queue q = (Queue){
+      .length = K,
+      .processes = calloc(K, sizeof(Process)),
+  };
   return q;
 }
 
@@ -146,15 +78,14 @@ void q_destroy(Queue *q)
 {
   if (!q)
     return;
-  processes_destroy(q);
-  free(q);
+  free(q->processes);
 }
 
 void print_queue(Queue *q)
 {
   for (size_t i = 0; i < q->length; i++)
   {
-    print_process(q->processes[i]);
+    print_process(&q->processes[i]);
   }
   scanf("%s", NULL);
   printf("------------------------------------------------------------------------------------------------------\n");

@@ -49,11 +49,11 @@ int main(int argc, char **argv)
   CPU_List *cpus = CPU_list_init(n_cpu);
 
   // Instanciar cola
-  Queue *q = q_init(K);
+  Queue q = q_init(K);
 
   // TODO: Delete later
   printf("Cola Vacía:\n");
-  print_queue(q);
+  print_queue(&q);
 
   // Instanciar procesos y agregar a la cola
   int n_process = 0;
@@ -62,73 +62,62 @@ int main(int argc, char **argv)
     token = strtok(line, s);
 
     int iteration = 0;
-    // Cada proceso que irá en la cola ya está inicializado pero vacío
-    // Basta con asignar valores a cada atributo
-    // Process *process = q->processes[n_process];
-    // process->state = NEW;
-    // process->times_in_CPU = 0;
-    // process->interruptions = 0;
-    // process->waiting_time = 0;
-    // process->response_time = 0;
-    // process->current_bursts = -1;
+    q.processes[n_process] = (Process){
+        .state = NEW,
+        .times_in_CPU = 0,
+        .interruptions = 0,
+        .waiting_time = 0,
+        .response_time = 0,
+        .current_bursts = -1,
+    };
 
-    add_process(q, n_process, token, &iteration, s);
-    // q->processes[n_process] = &(Process){
-    //     .state = NEW,
-    //     .times_in_CPU = 0,
-    //     .interruptions = 0,
-    //     .waiting_time = 0,
-    //     .response_time = 0,
-    //     .current_bursts = -1};
+    while (token != NULL)
+    {
+      if (iteration == 0)
+      {
+        strcpy(q.processes[n_process].name, token);
+      }
+      else if (iteration == 1)
+      {
+        q.processes[n_process].PID = atoi(token);
+      }
+      else if (iteration == 2)
+      {
+        q.processes[n_process].start_time = atoi(token);
+        if (atoi(token) == 0)
+        {
+          q.processes[n_process].state = READY;
+          q.processes[n_process].last_arrival_ready = 0;
+        }
+      }
+      else if (iteration == 3)
+      {
+        q.processes[n_process].deadline = atoi(token);
+        q.processes[n_process].priority = atoi(token);
+      }
+      else if (iteration == 4)
+      {
+        q.processes[n_process].total_bursts = (atoi(token) * 2) - 1;
+      }
+      else if (iteration >= 5)
+      {
+        q.processes[n_process].bursts[iteration - 5] = atoi(token);
+      }
 
-    // while (token != NULL)
-    // {
-    //   if (iteration == 0)
-    //   {
-    //     strcpy(q->processes[n_process]->name, token);
-    //   }
-    //   else if (iteration == 1)
-    //   {
-    //     q->processes[n_process]->PID = atoi(token);
-    //   }
-    //   else if (iteration == 2)
-    //   {
-    //     q->processes[n_process]->start_time = atoi(token);
-    //     if (atoi(token) == 0)
-    //     {
-    //       q->processes[n_process]->state = READY;
-    //       q->processes[n_process]->last_arrival_ready = 0;
-    //     }
-    //   }
-    //   else if (iteration == 3)
-    //   {
-    //     q->processes[n_process]->deadline = atoi(token);
-    //     q->processes[n_process]->priority = atoi(token);
-    //   }
-    //   else if (iteration == 4)
-    //   {
-    //     q->processes[n_process]->total_bursts = (atoi(token) * 2) - 1;
-    //   }
-    //   else if (iteration >= 5)
-    //   {
-    //     q->processes[n_process]->bursts[iteration - 5] = atoi(token);
-    //   }
-
-    //   token = strtok(NULL, s);
-    //   iteration += 1;
-    // }
+      token = strtok(NULL, s);
+      iteration += 1;
+    }
 
     n_process += 1;
   }
-
   fclose(input_file);
 
   // TODO: Delete later
   printf("Cola lista para iniciar simulación\n");
-  print_queue(q);
+  print_queue(&q);
 
-  // // Inicializar variable de instante actual de tiempo
-  // int current_time = 0;
+  // Inicializar variable de instante actual de tiempo
+  int current_time = 0;
   // int finished_processes = 0;
   // // Process *N_highest_priority = calloc(n_cpu, sizeof(Process));
   // Process *N_highest_priority[n_cpu];
@@ -256,7 +245,7 @@ int main(int argc, char **argv)
   // // free(N_highest_priority);
 
   // TODO: A lo mejor será necesario vaciar CPUs antes de destruirlas para que dsps no haya topes al hacer free a los procesos de la queue
-  q_destroy(q);
+  q_destroy(&q);
   CPU_list_destroy(cpus);
   return 0;
 }
