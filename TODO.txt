@@ -2,6 +2,8 @@
 [ ] Subir al servidor
 [ ] Probar en el servidor
 
+[ ] SACAR PROCESO DE LA CPU CUANDO TERMINA
+
 [X] Definir variable global "MAX=255"
 
 [X] Instanciar CPUs según parámetro de input (comandos)
@@ -18,25 +20,24 @@
 
 [X] Inicializar variable de instante de tiempo actual
 
-[ ] Simulación (iteración por cada instante (discreto) de tiempo)
+[X] Simulación (iteración por cada instante (discreto) de tiempo)
     [X] Obtener N procesos más prioritario (READY Y RUNNING) -> Método que recorra arreglo de procesos y entrege los N procesos con deadline más cercano (ordenados, TANTO EN ESTADO READY COMO RUNNING)
-    [ ] Revisar estado del proceso
+    [X] Revisar estado del proceso
         [X] RUNNING -> no hacer nada, pasar al siguiente proceso
-        [ ] READY -> ingresar proceso a alguna CPU
-            [ ] Si hay CPU vacía -> meter en esa CPU
-            [ ] Si NO hay CPU vacía -> buscar CPU cn proceso menos prioritario y reemplazar ese
+        [X] READY -> ingresar proceso a alguna CPU
+            [X] Si hay CPU vacía -> meter en esa CPU
+            [X] Si NO hay CPU vacía -> buscar CPU cn proceso menos prioritario y reemplazar ese
 
     [X] Pasar a siguiente instante
-    [ ] Recorrer cola de procesos y cambiar estados y atributos que correspondan
+    [X] Recorrer cola de procesos y cambiar estados y atributos que correspondan
 
 
 [ ] Escribir archivo de salida con estadísticas de simulación -> método a lo mejor también
 
 EVENTOS
-[ ] Llegada de un nuevo proceso (NEW->READY): proceso entra a cola de procesos
-[ ] Entrada de un proceso a la CPU (READY->RUNNING)
-[ ] Proceso interrumpido porque otro proceso con mayor prioridad debe ejecutar (RUNNING->READY)
-[ ] Interrupción I/O (RUNNING->WAITING)
------------------------------------------------------------------------------------------------
-[ ] Proceso termina (RUNNING->FINISHED)
-[ ] Proceso recibe I/O que estaba esperando (WAITING->READY)
+[X] Llegada de un nuevo proceso (NEW->READY): proceso entra a cola de procesos
+[X] Entrada de un proceso a la CPU (READY->RUNNING)
+[X] Proceso interrumpido porque otro proceso con mayor prioridad debe ejecutar (RUNNING->READY)
+[X] Interrupción I/O (RUNNING->WAITING)
+[X] Proceso termina (RUNNING->FINISHED)
+[X] Proceso recibe I/O que estaba esperando (WAITING->READY)

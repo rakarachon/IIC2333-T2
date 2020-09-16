@@ -36,6 +36,7 @@ typedef struct process
     int response_time; /* Time spent in state READY */
     int times_in_CPU;  /* Number of times the process has used a CPU */
     bool selected;     /* True if process has been selected as one of the N processes with highest priority */
+    bool was_interrupted_last_time;
 } Process;
 
 Process *process_init();

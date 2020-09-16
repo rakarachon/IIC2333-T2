@@ -69,6 +69,7 @@ int main(int argc, char **argv)
         .waiting_time = 0,
         .response_time = 0,
         .current_bursts = -1,
+        .was_interrupted_last_time = false,
     };
 
     while (token != NULL)
@@ -118,133 +119,155 @@ int main(int argc, char **argv)
 
   // Inicializar variable de instante actual de tiempo
   int current_time = 0;
-  // int finished_processes = 0;
-  // // Process *N_highest_priority = calloc(n_cpu, sizeof(Process));
-  // Process *N_highest_priority[n_cpu];
+  int finished_processes = 0;
+  // Process *N_highest_priority = calloc(n_cpu, sizeof(Process *));
+  // Queue N_highest_priority = q_init(n_cpu);
+  int *N_highest_priority = calloc(n_cpu, sizeof(int));
 
-  // // TODO: Delete this variable later
-  // char input[1];
-  // /* INICIO SIMULACIÓN */
-  // while (finished_processes < K)
-  // {
-  //   // Obtener N procesos más prioritarios
-  //   get_N_highest_priority(&q, *N_highest_priority, n_cpu);
-  //   int time_spent_in_ready_q;
-  //   for (int i = 0; i < n_cpu; i++)
-  //   {
-  //     // Process current_pr = N_highest_priority[i];
-  //     // printf("PROCESO %d: %s\n", current_pr.PID, current_pr.name);
-  //     // Revisar estado del proceso
-  //     if (N_highest_priority[i]->state == READY)
-  //     {
-  //       // READY -> ingresar proceso a alguna CPU
-  //       // printf("  READY\n");
+  // TODO: Delete this variable later
+  char input[1];
+  int hp_idx;
+  int n_ready;
+  int time_spent_in_ready_q;
+  /* INICIO SIMULACIÓN */
+  while (finished_processes < K)
+  {
+    update_processes(&q, K, current_time, &finished_processes);
+    // Obtener N procesos más prioritarios
+    n_ready = get_N_highest_priority(&q, N_highest_priority, &n_cpu); /* Cantidad de procesos que quieren entrar a CPU, n<=N */
+    printf("N procesos más prioritarios:\n");
+    for (int i = 0; i < n_ready; i++)
+    {
+      hp_idx = N_highest_priority[i];
+      // Revisar estado del proceso
+      print_process(&q.processes[hp_idx]);
+      // printf("KKCK %d\n", N_highest_priority[n_ready]);
+      if (q.processes[hp_idx].state == READY)
+      {
+        // printf("READY -> ingresar proceso a alguna CPU\n");
+        // Si hay CPU vacía -> meter en esa CPU
+        if (available_cpus > 0)
+        {
+          for (size_t j = 0; j < n_cpu; j++)
+          {
+            if (cpus->list[j]->available)
+            {
+              // cpus[j].process = &current_pr;
+              cpus->list[j]->process = &(q.processes[hp_idx]);
+              // cpus->list[j]->process = &N_highest_priority.processes[j];
+              cpus->list[j]->available = false;
+              available_cpus--;
 
-  //       // Si hay CPU vacía -> meter en esa CPU
-  //       if (available_cpus > 0)
-  //       {
-  //         for (size_t j = 0; j < n_cpu; j++)
-  //         {
-  //           if (cpus[j].available)
-  //           {
-  //             // cpus[j].process = &current_pr;
-  //             cpus[j].process = N_highest_priority[j];
-  //             cpus[j].available = false;
-  //             available_cpus--;
+              // Actualizar proceso que entra a la CPU según corresponda
+              cpus->list[j]->process->state = RUNNING;
+              time_spent_in_ready_q = current_time - cpus->list[j]->process->last_arrival_ready;
+              cpus->list[j]->process->response_time += time_spent_in_ready_q;
+              cpus->list[j]->process->times_in_CPU++;
+              cpus->list[j]->process->last_arrival_CPU = current_time;
+              if (cpus->list[j]->process->was_interrupted_last_time)
+              {
+                cpus->list[j]->process->was_interrupted_last_time = false;
+              }
+              else
+              {
+                cpus->list[j]->process->current_bursts++;
+              }
+              cpus->list[j]->process->current_burst_start_time = current_time;
+              break;
+            }
+          }
+        }
+        // Si NO hay CPU vacía -> buscar CPU con proceso menos prioritario y reemplazar ese
+        else
+        {
+          int lowest_priority = cpus->list[0]->process->priority;
+          int lpi = 0; /* lowest priority index */
+          for (size_t i = 1; i < n_cpu; i++)
+          {
+            if (cpus->list[i]->process->priority > lowest_priority && !cpus->list[i]->process->selected)
+            {
+              lowest_priority = cpus->list[i]->process->priority;
+              lpi = i;
+            }
+          }
 
-  //             // Actualizar proceso que entra a la CPU según corresponda
-  //             cpus[j].process->state = RUNNING;
-  //             time_spent_in_ready_q = current_time - cpus[j].process->last_arrival_ready;
-  //             cpus[j].process->response_time = cpus[j].process->response_time + time_spent_in_ready_q;
-  //             cpus[j].process->times_in_CPU++;
-  //             cpus[j].process->last_arrival_CPU = current_time;
-  //             cpus[j].process->current_bursts++;
-  //             cpus[j].process->current_burst_start_time = current_time;
-  //             break;
-  //           }
-  //         }
-  //       }
-  //       // Si NO hay CPU vacía -> buscar CPU con proceso menos prioritario y reemplazar ese
-  //       else
-  //       {
-  //         int lowest_priority = cpus[0].process->priority;
-  //         int lpi = 0; /* lowest priority index */
-  //         for (size_t i = 1; i < n_cpu; i++)
-  //         {
-  //           if (cpus[i].process->priority > lowest_priority)
-  //           {
-  //             lowest_priority = cpus[i].process->priority;
-  //             lpi = i;
-  //           }
-  //         }
+          // Cambiar estado del proceso que estaba en la CPU
+          int cb = cpus->list[lpi]->process->current_bursts;             /* current burst index */
+          int cb_duration = cpus->list[lpi]->process->bursts[cb];        /* current burst duration */
+          int last_arrival = cpus->list[lpi]->process->last_arrival_CPU; /* Instant in which the current burst started */
+          int cb_exe_time = current_time - last_arrival;                 /* Number of instants the current burst has been in a cpu executing */
+          if (cb_exe_time < cb_duration)
+          {
+            // Si aun no termina la ráfaga actual del proceso, interrumpir
+            cpus->list[lpi]->process->state = READY;
+            cpus->list[lpi]->process->last_arrival_ready = current_time;
+            cpus->list[lpi]->process->interruptions++;
+            cpus->list[lpi]->process->was_interrupted_last_time = true;
+            // Acortamos tiempo de duración de ráfaga actual para que la próxima vez que vuelva a entrar no parta la misma ráfaga desde cero
+            cpus->list[lpi]->process->bursts[cb] = cb_duration - cb_exe_time;
+          }
+          // TODO: Cachar si hay que borrar esto
+          // else
+          // {
+          //   // Caso 1: pasa a un I/O burst
+          //   // Si justo terminó la ráfaga que estaba ejecutándose, se actualiza su estado según corresponda
+          //   cpus->list[lpi]->process->state = WAITING;
+          //   cpus->list[lpi]->process->last_arrival_waiting = current_time;
+          //   cpus->list[lpi]->process->current_bursts++;
+          //   cpus->list[lpi]->process->current_burst_start_time = current_time;
+          // }
 
-  //         // Cambiar estado del proceso que estaba en la CPU
-  //         int cb = cpus[lpi].process->current_bursts;             /* current burst index */
-  //         int cb_duration = cpus[lpi].process->bursts[cb];        /* current burst duration */
-  //         int last_arrival = cpus[lpi].process->last_arrival_CPU; /* Instant in which the current burst started */
-  //         int cb_exe_time = current_time - last_arrival;          /* Number of instants the current burst has been in a cpu executing */
-  //         if (cb_exe_time < cb_duration)
-  //         {
-  //           // Si aun no termina la ráfaga actual del proceso, interrumpir
-  //           cpus[lpi].process->state = READY;
-  //           cpus[lpi].process->last_arrival_ready = current_time;
-  //           cpus[lpi].process->interruptions++;
-  //           // Acortamos tiempo de duración de ráfaga actual para que la próxima vez que vuelva a entrar no parta la misma ráfaga desde cero
-  //           cpus[lpi].process->bursts[cb] = cb_duration - cb_exe_time;
-  //         }
-  //         else
-  //         {
-  //           // Caso 1: pasa a un i/o burst
-  //           //TODO: Caso 2: termino todos los burst
-  //           // TODO: Caso 3: proceso pasa a i/o burst pero no es revisado en esta parte
-  //           // TODO: Caso 4: proceso pasa a finished pero no es revisado en esta parte
-  //           // Si justo terminó la ráfaga que estaba ejecutándose, se actualiza su estado según corresponda
-  //           cpus[lpi].process->state = WAITING;
-  //           cpus[lpi].process->last_arrival_waiting = current_time;
-  //           cpus[lpi].process->current_bursts++;
-  //           cpus[lpi].process->current_burst_start_time = current_time;
-  //         }
-
-  //         // Cambiar estado del proceso que entra a la CPU
-  //         cpus[lpi].process = N_highest_priority[i];
-  //         // TODO: Creo que estas 2 líneas no son necesarias
-  //         // cpus[lpi].available = false;
-  //         // available_cpus--;
-
-  //         // Actualizar proceso que entra a la CPU según corresponda
-  //         cpus[lpi].process->state = RUNNING;
-  //         time_spent_in_ready_q = current_time - cpus[i].process->last_arrival_ready;
-  //         cpus[i].process->response_time = cpus[i].process->response_time + time_spent_in_ready_q;
-  //         cpus[i].process->times_in_CPU++;
-  //         cpus[i].process->last_arrival_CPU = current_time;
-  //         cpus[i].process->current_bursts++;
-  //         cpus[i].process->current_burst_start_time = current_time;
-  //       }
-  //     }
-  //     // else
-  //     // {
-  //     //   // RUNNING -> no hacer nada, pasar al siguiente proceso
-  //     //   printf("  RUNNING\n");
-  //     // }
-  //   }
-  //   printf("CURRENT TIME: %d\n", current_time);
-  //   print_queue(q);
-  //   scanf("%s", input);
-  //   // Pasar a siguiente instante
-  //   current_time++;
-  //   // Recorrer cola de procesos y hacer cambios que correspondan luego de avanzar una unidad de tiempo
-  //   update_processes(&q, K, current_time);
-  //   // break;
-  // }
+          // Actualizar proceso que entra a la CPU según corresponda
+          cpus->list[i]->process = &(q.processes[hp_idx]);
+          cpus->list[i]->process->state = RUNNING;
+          time_spent_in_ready_q = current_time - cpus->list[i]->process->last_arrival_ready;
+          cpus->list[i]->process->response_time += time_spent_in_ready_q;
+          cpus->list[i]->process->waiting_time += time_spent_in_ready_q;
+          cpus->list[i]->process->times_in_CPU++;
+          cpus->list[i]->process->last_arrival_CPU = current_time;
+          // cpus->list[i]->process->current_bursts++;
+          if (cpus->list[i]->process->was_interrupted_last_time)
+          {
+            cpus->list[i]->process->was_interrupted_last_time = false;
+          }
+          else
+          {
+            cpus->list[i]->process->current_bursts++;
+          }
+          cpus->list[i]->process->current_burst_start_time = current_time;
+        }
+      }
+      // NUNCA DEBIERA ENTRAR AL ELSE
+      // else
+      // {
+      //   // RUNNING
+      //   // Caso 1: pasa a un I/O burst
+      //   // Si justo terminó la ráfaga que estaba ejecutándose, se actualiza su estado según corresponda
+      //   N_highest_priority.processes[i].state = WAITING;
+      //   N_highest_priority.processes[i].last_arrival_waiting = current_time;
+      //   N_highest_priority.processes[i].current_bursts++;
+      //   N_highest_priority.processes[i].current_burst_start_time = current_time;
+      // }
+    }
+    for (int i = 0; i < n_ready; i++)
+    {
+      q.processes[N_highest_priority[i]].selected = false;
+    }
+    printf("~~~~~~~~~~~~~~\nCURRENT TIME: %d\n", current_time);
+    print_queue(&q);
+    scanf("%s", input);
+    // Pasar a siguiente instante
+    current_time++;
+    // Recorrer cola de procesos y hacer cambios que correspondan luego de avanzar una unidad de tiempo
+    // update_processes(&q, K, current_time, &finished_processes);
+  }
   // /* FIN SIMULACIÓN */
 
   // // TODO: Output file
   // // FILE *output_file = fopen(argv[2], "w");
   // // fclose(output_file);
 
-  // // free(N_highest_priority);
-
-  // TODO: A lo mejor será necesario vaciar CPUs antes de destruirlas para que dsps no haya topes al hacer free a los procesos de la queue
+  free(N_highest_priority);
   q_destroy(&q);
   CPU_list_destroy(cpus);
   return 0;

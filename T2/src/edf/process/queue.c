@@ -91,65 +91,105 @@ void print_queue(Queue *q)
   printf("------------------------------------------------------------------------------------------------------\n");
 }
 
-// ------------------------------------------------------
+int get_N_highest_priority(Queue *queue, int *N_highest, int *N)
+{
+  int i = 0;            /* Counter to get N processes */
+  Process *CHP_process; /* Current Highest Priority Process */
+  int current_idx;      /* Index of the process associated with CHP_process */
+  // int selected_indexes[N]; /* Queue indexes of the processes selected with highest priority */
+  int selected_counter = 0;
+  bool first;
+  Process *pr;
+  while (i < *N)
+  {
+    first = true;
+    // Find highest deadline that has not been selected yet
+    for (size_t idx = 0; idx < queue->length; idx++)
+    {
+      pr = &(queue->processes[idx]);
+      if (first)
+      {
+        if (!(pr->selected) && (pr->state == RUNNING || pr->state == READY))
+        {
+          CHP_process = &(queue->processes[idx]);
+          current_idx = idx;
+          first = false;
+        }
+        continue;
+      }
+      // Si el proceso no ha sido seleccionado
+      if (!(pr->selected) && (pr->state == RUNNING || pr->state == READY))
+      {
+        // Si la prioridad es igual a la mayor prioridad actual, se elige el proceso de menor PID
+        // Si la prioridad es mayor (i.e. más cercana a cero), se reemplaza
+        if ((pr->priority == CHP_process->priority && pr->PID < CHP_process->PID) || pr->priority < CHP_process->priority)
+        {
+          // CHP_process = queue->processes[idx];
+          CHP_process = pr;
+          current_idx = idx;
+        }
+      }
+    }
+    if (!first)
+    {
+      queue->processes[current_idx].selected = true;
+      // N_highest->processes[i] = queue->processes[current_idx];
+      N_highest[i] = current_idx;
+      // selected_indexes[i] = current_idx;
+      selected_counter++;
+    }
+    i++;
+  }
 
-// void get_N_highest_priority(Queue *queue, Process *N_highest, int N)
-// {
-//   int i = 0;               /* Counter to get N processes */
-//   Process CHP_process;     /* Current Highest Priority Process */
-//   int current_idx;         /* Index of the process associated with CHP_process */
-//   int selected_indexes[N]; /* Queue indexes of the processes selected with highest priority */
-//   bool first;
-//   Process pr;
-//   while (i < N)
-//   {
-//     first = true;
-//     // Find highest deadline that has not been selected yet
-//     for (size_t idx = 0; idx < queue->length; idx++)
-//     {
-//       pr = queue->processes[idx];
-//       if (first && !pr.selected && (pr.state == RUNNING || pr.state == READY))
-//       {
-//         CHP_process = queue->processes[idx];
-//         current_idx = idx;
-//         first = false;
-//         continue;
-//       }
-//       // Si el proceso no ha sido seleccionado
-//       if (!pr.selected)
-//       {
-//         // Si la prioridad es igual a la mayor prioridad actual, se elige el proceso de menor PID
-//         // Si la prioridad es mayor (i.e. más cercana a cero), se reemplaza
-//         if ((pr.priority == CHP_process.priority && pr.PID < CHP_process.PID) || pr.priority < CHP_process.priority)
-//         {
-//           CHP_process = queue->processes[idx];
-//           current_idx = idx;
-//         }
-//       }
-//     }
-//     queue->processes[current_idx].selected = true;
-//     // N_highest[i] = CHP_process;
-//     N_highest[i] = queue->processes[current_idx];
-//     selected_indexes[i] = current_idx;
-//     i++;
-//   }
+  // Settear selected de vuelta a False
+  // for (size_t j = 0; j < selected_counter; j++)
+  // {
+  //   // queue->processes[selected_indexes[j]].selected = false;
+  //   queue->processes[N_highest[j]].selected = false;
+  // }
+  return selected_counter;
+}
 
-//   // Settear selected de vuelta a False
-//   for (size_t j = 0; j < N; j++)
-//   {
-//     queue->processes[selected_indexes[j]].selected = false;
-//   }
-// }
+void update_processes(Queue *queue, int n_process, int c_time, int *finished_processes)
+{
+  for (int i = 0; i < n_process; i += 1)
+  {
+    queue->processes[i].priority -= 1;
+    // TODO: testear
+    if (queue->processes[i].start_time == c_time)
+    {
+      queue->processes[i].state = READY;
+      queue->processes[i].last_arrival_ready = c_time;
+    }
 
-// void update_processes(Queue *queue, int n_process, int c_time)
-// {
-//   for (int i = 0; i < n_process; i += 1)
-//   {
-//     queue->processes[i].priority -= 1;
-//     // TODO: testear
-//     if (queue->processes[i].start_time == c_time)
-//     {
-//       queue->processes[i].state = READY;
-//     }
-//   }
-// }
+    int cb = queue->processes[i].current_bursts;
+    int tb = queue->processes[i].total_bursts;
+    int cb_duration = queue->processes[i].bursts[cb];
+    if (queue->processes[i].state == RUNNING && c_time - queue->processes[i].last_arrival_CPU == cb_duration)
+    {
+      if (cb == tb - 1)
+      {
+        // Proceso terminó
+        queue->processes[i].state = FINISHED;
+        queue->processes[i].end_time = c_time;
+        finished_processes++;
+      }
+      else
+      {
+        // Proceso pasa a I/O burst
+        queue->processes[i].state = WAITING;
+        queue->processes[i].current_bursts++;
+        queue->processes[i].current_burst_start_time = c_time;
+        queue->processes[i].last_arrival_waiting = c_time;
+      }
+    }
+    else if (queue->processes[i].state == WAITING && c_time - queue->processes[i].last_arrival_waiting == cb_duration)
+    {
+      queue->processes[i].state = READY;
+      // queue->processes[i].current_bursts++;
+      // queue->processes[i].current_burst_start_time = c_time;
+      queue->processes[i].last_arrival_ready = c_time;
+      queue->processes[i].waiting_time += cb_duration;
+    }
+  }
+}
