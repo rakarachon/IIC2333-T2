@@ -123,8 +123,6 @@ int main(int argc, char **argv)
   /* INICIO SIMULACIÓN */
   while (finished_processes < K)
   {
-    // Recorrer cola de procesos y hacer cambios que correspondan luego de avanzar una unidad de tiempo
-    update_processes(&q, K, current_time, &finished_processes, &available_cpus, cpus);
     // printf("Available CPUS: %d \n", available_cpus);
     // Obtener N procesos más prioritarios
     n_ready = get_N_highest_priority(&q, N_highest_priority, &n_cpu); /* Cantidad de procesos que quieren entrar a CPU, n<=N */
@@ -157,6 +155,7 @@ int main(int argc, char **argv)
                 // Primera vez en CPU
                 cpus->list[j]->process->response_time += time_spent_in_ready_q;
               }
+              cpus->list[j]->process->waiting_time += time_spent_in_ready_q;
               cpus->list[j]->process->times_in_CPU++;
               cpus->list[j]->process->last_arrival_CPU = current_time;
               cpus->list[j]->process->CPU_index = j;
@@ -247,6 +246,8 @@ int main(int argc, char **argv)
     }
     // Pasar a siguiente instante
     current_time++;
+    // Recorrer cola de procesos y hacer cambios que correspondan luego de avanzar una unidad de tiempo
+    update_processes(&q, K, current_time, &finished_processes, &available_cpus, cpus);
   }
   /* FIN SIMULACIÓN */
 
