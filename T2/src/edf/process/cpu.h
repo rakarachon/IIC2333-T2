@@ -1,6 +1,6 @@
+#pragma once
 #include <stdbool.h>
 #include "process.h"
-#pragma once
 
 typedef struct cpu
 {

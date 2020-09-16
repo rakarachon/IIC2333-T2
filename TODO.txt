@@ -1,8 +1,9 @@
-[ ] CORRER CON VALGRIND
+[X] CORRER CON VALGRIND
 [ ] Subir al servidor
 [ ] Probar en el servidor
 
-[ ] SACAR PROCESO DE LA CPU CUANDO TERMINA
+[X] SACAR PROCESO DE LA CPU CUANDO TERMINA
+[X] Tiempo de ejecución < 1min
 
 [X] Definir variable global "MAX=255"
 
@@ -32,7 +33,7 @@
     [X] Recorrer cola de procesos y cambiar estados y atributos que correspondan
 
 
-[ ] Escribir archivo de salida con estadísticas de simulación -> método a lo mejor también
+[X] Escribir archivo de salida con estadísticas de simulación
 
 EVENTOS
 [X] Llegada de un nuevo proceso (NEW->READY): proceso entra a cola de procesos

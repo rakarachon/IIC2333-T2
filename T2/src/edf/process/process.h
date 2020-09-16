@@ -1,6 +1,6 @@
+#pragma once
 #include <sys/types.h> /* Primitive System Data Types */
 #include <stdbool.h>
-#pragma once
 
 #define MAX 255
 
@@ -29,13 +29,12 @@ typedef struct process
     int interruptions;            /* Number of times the process has been interrupted */
     int last_arrival_ready;       /* Specific time of the last change of the process state to READY */
     int last_arrival_CPU;         /* Specific time of the last arrival to a CPU */
-    // TODO: revisar si last_arrival_waiting es necesario
-    int last_arrival_waiting; /* Specific time of the last change of the process state to WAITING */
-    int waiting_time;         /* Time spent in state WAITING plus state READY */
-    // TODO: Averiguar si response time es suma de todos los tiempos que pasa en Ready, o solo la primera vez que llega a Ready
-    int response_time; /* Time spent in state READY */
-    int times_in_CPU;  /* Number of times the process has used a CPU */
-    bool selected;     /* True if process has been selected as one of the N processes with highest priority */
+    int CPU_index;                /* Index of the CPU in which the process is currently executing */
+    int last_arrival_waiting;     /* Specific time of the last change of the process state to WAITING */
+    int waiting_time;             /* Time spent in state WAITING plus state READY */
+    int response_time;            /* Time spent in state READY */
+    int times_in_CPU;             /* Number of times the process has used a CPU */
+    bool selected;                /* True if process has been selected as one of the N processes with highest priority */
     bool was_interrupted_last_time;
 } Process;
 

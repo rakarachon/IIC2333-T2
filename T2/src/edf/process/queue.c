@@ -60,7 +60,7 @@ void print_process(Process *pr)
     printf("    Current burst start time: %d\n", pr->current_burst_start_time);
     printf("    Total interruptions so far: %d\n", pr->interruptions);
     printf("    Waiting time so far: %d\n", pr->waiting_time);
-    printf("    Total response time so far: %d\n", pr->response_time);
+    printf("    Response time: %d\n", pr->response_time);
     printf("    Total number of times the process has been in a CPU so far: %d\n", pr->times_in_CPU);
   }
 }
@@ -87,8 +87,6 @@ void print_queue(Queue *q)
   {
     print_process(&q->processes[i]);
   }
-  scanf("%s", NULL);
-  printf("------------------------------------------------------------------------------------------------------\n");
 }
 
 int get_N_highest_priority(Queue *queue, int *N_highest, int *N)
@@ -150,21 +148,25 @@ int get_N_highest_priority(Queue *queue, int *N_highest, int *N)
   return selected_counter;
 }
 
-void update_processes(Queue *queue, int n_process, int c_time, int *finished_processes)
+void update_processes(Queue *queue, int n_process, int c_time, int *finished_processes, int *available_cpus, CPU_List *cpus)
 {
+  int cb;
+  int tb;
+  int cb_duration;
+  int cpu_idx;
   for (int i = 0; i < n_process; i += 1)
   {
-    queue->processes[i].priority -= 1;
-    // TODO: testear
+    if (queue->processes[i].state != FINISHED)
+      queue->processes[i].priority -= 1;
     if (queue->processes[i].start_time == c_time)
     {
       queue->processes[i].state = READY;
       queue->processes[i].last_arrival_ready = c_time;
     }
 
-    int cb = queue->processes[i].current_bursts;
-    int tb = queue->processes[i].total_bursts;
-    int cb_duration = queue->processes[i].bursts[cb];
+    cb = queue->processes[i].current_bursts;
+    tb = queue->processes[i].total_bursts;
+    cb_duration = queue->processes[i].bursts[cb];
     if (queue->processes[i].state == RUNNING && c_time - queue->processes[i].last_arrival_CPU == cb_duration)
     {
       if (cb == tb - 1)
@@ -172,7 +174,7 @@ void update_processes(Queue *queue, int n_process, int c_time, int *finished_pro
         // Proceso terminó
         queue->processes[i].state = FINISHED;
         queue->processes[i].end_time = c_time;
-        finished_processes++;
+        (*finished_processes)++;
       }
       else
       {
@@ -182,12 +184,14 @@ void update_processes(Queue *queue, int n_process, int c_time, int *finished_pro
         queue->processes[i].current_burst_start_time = c_time;
         queue->processes[i].last_arrival_waiting = c_time;
       }
+      (*available_cpus)++;
+      cpu_idx = queue->processes[i].CPU_index;
+      cpus->list[cpu_idx]->available = true;
+      queue->processes[i].CPU_index = -1;
     }
     else if (queue->processes[i].state == WAITING && c_time - queue->processes[i].last_arrival_waiting == cb_duration)
     {
       queue->processes[i].state = READY;
-      // queue->processes[i].current_bursts++;
-      // queue->processes[i].current_burst_start_time = c_time;
       queue->processes[i].last_arrival_ready = c_time;
       queue->processes[i].waiting_time += cb_duration;
     }
